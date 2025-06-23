@@ -222,7 +222,7 @@ def main() -> None:
         cfg = v.copy()
         cfg["model_name"] = k
         cfg["vocab_size"] = 10000
-        cfg["context_length"] = 1024
+        cfg["context_length"] = 512
         cfg["rope_theta"] = 10000.0
         cfg["lr"] = 3e-4
         cfg["beta1"] = 0.9
