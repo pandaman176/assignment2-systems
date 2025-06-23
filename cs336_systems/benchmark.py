@@ -2,6 +2,7 @@ import timeit
 import torch
 import torch.nn as nn
 import os
+import numpy as np
 from loguru import logger
 from typing import Any, Dict
 import pandas as pd
@@ -16,8 +17,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Benchmark runner")
     parser.add_argument("--use-backward", action="store_true",
                         help="Whether to include backward pass in benchmark")
-    parser.add_argument("--num", type=int, default=5,
-                        help="Number of benchmark(default: 5)")
+    parser.add_argument("--num", type=int, default=3,
+                        help="Number of benchmark(default: 3)")
+    parser.add_argument("--warm-steps", type=int, default=5,
+                        help="Number of warm steps(default: 5)")
     return parser.parse_args()
 
 _PRESETS: dict[str, dict[str, int]] = {
@@ -40,6 +43,8 @@ class BenchmarkAnalyzer:
             "model_name": results["model_name"],
             "avg_forward_time": results["avg_forward_time"],
             "total_forward_time": results["total_forward_time"],
+            "std_forward_time": results["std_forward_time"],
+            
         }
         
         # 如果包含backward信息
@@ -47,7 +52,9 @@ class BenchmarkAnalyzer:
             summary_result.update({
                 "avg_backward_time": results["avg_backward_time"],
                 "total_backward_time": results["total_backward_time"],
-                "avg_total_time": results["avg_total_time"]
+                "avg_total_time": results["avg_total_time"],
+                "std_backward_time": results["std_backward_time"],
+                "std_total_time": results["std_total_time"],
             })
         
         self.results_list.append(summary_result)
@@ -207,6 +214,7 @@ def run_benchmark(
         "forward_times": forward_times,
         "total_forward_time": sum(forward_times).item(),
         "avg_forward_time": (sum(forward_times) / len(forward_times)).item(),
+        "std_forward_time": np.std(forward_times).item(),
     }
     if include_backward:
         results["backward_time"] = backward_times
@@ -214,6 +222,8 @@ def run_benchmark(
         results["total_backward_time"] = sum(backward_times).item()
         results["avg_backward_time"] = (sum(backward_times) / len(backward_times)).item()
         results["avg_total_time"] = (sum(total_times) / len(total_times)).item()
+        results["std_backward_time"] = np.std(backward_times).item()
+        results["std_total_time"] = np.std(total_times).item()
 
     return results
     
@@ -248,8 +258,8 @@ def main() -> None:
         cfg["weight_decay"] = 0.01
 
         benchmark_cfg = {
-            "warmup_steps": 5,
-            "total_steps": 15,
+            "warmup_steps": args.warm_steps,
+            "total_steps": 10 + args.warm_steps,
             "include_backward": args.use_backward,
             "batch_size": 2,
         }
