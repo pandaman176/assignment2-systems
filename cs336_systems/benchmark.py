@@ -212,9 +212,9 @@ def run_benchmark(
     if include_backward:
         results["backward_time"] = backward_times
         results["total_time"] = total_times
-        results["total_backward_time"] = sum(backward_times)
-        results["avg_backward_time"] = sum(backward_times) / len(backward_times)
-        results["avg_total_time"] = sum(total_times) / len(total_times)
+        results["total_backward_time"] = sum(backward_times).item()
+        results["avg_backward_time"] = (sum(backward_times) / len(backward_times)).item()
+        results["avg_total_time"] = (sum(total_times) / len(total_times)).item()
 
     return results
     
