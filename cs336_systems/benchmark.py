@@ -225,7 +225,11 @@ def main() -> None:
     device = torch.device("cuda:0")
     logger.info(f"Using device: {device}")
 
+    curr_benchmark_num = 0
     for k, v in _PRESETS.items():
+        if curr_benchmark_num >= args.num:
+            break
+        curr_benchmark_num += 1
         logger.info(f"Running benchmark for {k}")
         cfg = v.copy()
         cfg["model_name"] = k
