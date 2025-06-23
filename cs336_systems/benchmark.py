@@ -62,7 +62,6 @@ class BenchmarkAnalyzer:
         if self.df is None or self.df.empty:
             return None
         
-        print(self.df.dtypes)
         # 按模型分组统计
         agg_dict = {
             'avg_forward_time': ['mean', 'std', 'min', 'max'],
@@ -315,6 +314,9 @@ def main() -> None:
         
         # 绘制图表
         analyzer.plot_performance_comparison()
+    
+    # 导出结果到markdown文件
+    analyzer.export_to_markdown()
 
 
 
