@@ -186,7 +186,7 @@ def run_benchmark(
     total_times = forward_times
     if include_backward:
         backward_times = torch.tensor(backward_times)
-        total_time += backward_time
+        total_times += backward_times
     results = {
         "model_name": model_name,
         "forward_times": forward_times,
