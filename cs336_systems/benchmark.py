@@ -201,9 +201,7 @@ def run_benchmark(
         "model_name": model_name,
         "forward_times": forward_times,
         "total_forward_time": sum(forward_times),
-        "total_backward_time": sum(backward_times),
         "avg_forward_time": sum(forward_times) / len(forward_times),
-        "avg_backward_time": sum(backward_times) / len(backward_times),
     }
     if include_backward:
         results["backward_time"] = backward_times
