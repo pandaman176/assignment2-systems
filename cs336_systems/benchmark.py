@@ -223,6 +223,11 @@ def main() -> None:
         cfg["vocab_size"] = 10000
         cfg["context_length"] = 1024
         cfg["rope_theta"] = 10000.0
+        cfg["lr"] = 3e-4
+        cfg["beta1"] = 0.9
+        cfg["beta2"] = 0.999
+        cfg["eps"] = 1e-8
+        cfg["weight_decay"] = 0.01
 
         benchmark_cfg = {
             "warmup_steps": 5,
@@ -246,10 +251,10 @@ def main() -> None:
         # create optimizer
         optimizer = AdamW(
             model.parameters(), 
-            lr=cfg.lr,
-            betas=(cfg.beta1, cfg.beta2),
-            eps=cfg.eps,
-            weight_decay=cfg.weight_decay,
+            lr=cfg["lr"],
+            betas=(cfg["beta1"], cfg["beta2"]),
+            eps=cfg["eps"],
+            weight_decay=cfg["weight_decay"],
         )
 
         # run benchmark
