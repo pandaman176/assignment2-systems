@@ -234,7 +234,7 @@ def main() -> None:
             "warmup_steps": 5,
             "total_steps": 15,
             "include_backward": True,
-            "batch_size": 4,
+            "batch_size": 2,
         }
 
         # create model
