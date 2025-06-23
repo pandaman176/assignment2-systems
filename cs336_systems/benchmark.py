@@ -16,6 +16,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Benchmark runner")
     parser.add_argument("--use-backward", action="store_true",
                         help="Whether to include backward pass in benchmark")
+    parser.add_argument("--num", type=int, default=5,
+                        help="Number of benchmark(default: 5)")
     return parser.parse_args()
 
 _PRESETS: dict[str, dict[str, int]] = {
