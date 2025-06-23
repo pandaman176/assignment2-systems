@@ -63,12 +63,17 @@ class BenchmarkAnalyzer:
             return None
         
         # 按模型分组统计
-        summary = self.df.groupby('model_name').agg({
+        agg_dict = {
             'avg_forward_time': ['mean', 'std', 'min', 'max'],
             'total_forward_time': ['mean', 'std'],
-            'avg_backward_time': ['mean', 'std'] if 'avg_backward_time' in self.df.columns else None,
-            'avg_total_time': ['mean', 'std'] if 'avg_total_time' in self.df.columns else None
-        }).round(4)
+        }
+
+        if 'avg_backward_time' in self.df.columns:
+            agg_dict['avg_backward_time'] = ['mean', 'std']
+        if 'avg_total_time' in self.df.columns:
+            agg_dict['avg_total_time'] = ['mean', 'std']
+
+        summary = self.df.groupby('model_name').agg(agg_dict).round(4)
         
         # 展平多级列名
         summary.columns = [f"{col[0]}_{col[1]}" for col in summary.columns]
@@ -284,7 +289,7 @@ def main() -> None:
             device=device,
         )
 
-        logger.info(f"Results: {results}")
+        logger.info(f"Results: \n{results}")
         analyzer.add_result(results)
 
 
