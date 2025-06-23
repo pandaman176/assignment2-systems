@@ -169,13 +169,14 @@ def run_benchmark(
         loss = cross_entropy(logits, outputs)
         torch.cuda.synchronize()
         forward_time = timeit.default_timer() - t0
-        logger.info(f"Forward time: {forward_time:.3f}")
         if include_backward:
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             backward_time = timeit.default_timer() - forward_time - t0
-            logger.info(f"Backward time: {backward_time:.3f}")
+            logger.info(f"Forward time: {forward_time:.3f}s, Backward time: {backward_time:.3f}s")
+        else:
+            logger.info(f"Forward time: {forward_time:.3f}s")
         
         if step >= warmup_steps:
             forward_times.append(forward_time)
