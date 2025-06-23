@@ -6,10 +6,17 @@ from loguru import logger
 from typing import Any, Dict
 import pandas as pd
 import matplotlib.pyplot as plt
+import argparse
 
 from cs336_basics.optimizer import AdamW
 from cs336_basics.model import BasicsTransformerLM
 from cs336_basics.nn_utils import cross_entropy
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Benchmark runner")
+    parser.add_argument("--use-backward", action="store_true",
+                        help="Whether to include backward pass in benchmark")
+    return parser.parse_args()
 
 _PRESETS: dict[str, dict[str, int]] = {
     "sm": {"d_model": 768, "d_ff": 3072, "num_layers": 12, "num_heads": 12},
@@ -161,8 +168,8 @@ def run_benchmark(
     forward_times = []
     if include_backward:
         backward_times = []
+    model.train(include_backward)
     for step in range(total_steps):
-        model.train()
         torch.cuda.synchronize() # 保证计时从这开始
         t0 = timeit.default_timer()
         logits = model(inputs)
@@ -207,6 +214,7 @@ def run_benchmark(
     
 
 def main() -> None:
+    args = parse_args()
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")
     
@@ -233,7 +241,7 @@ def main() -> None:
         benchmark_cfg = {
             "warmup_steps": 5,
             "total_steps": 15,
-            "include_backward": True,
+            "include_backward": args.use_backward,
             "batch_size": 2,
         }
 
