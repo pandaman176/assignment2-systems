@@ -4,6 +4,7 @@ from typing import Type
 
 import torch
 
+from cs336_systems.flashattention2 import FlashAttention2_torch
 
 
 def get_flashattention_autograd_function_pytorch() -> Type:
@@ -16,7 +17,7 @@ def get_flashattention_autograd_function_pytorch() -> Type:
         A class object (not an instance of the class)
     """
     # For example: return MyRMSNormAutogradFunctionClass
-    raise NotImplementedError
+    return FlashAttention2_torch
 
 
 def get_flashattention_autograd_function_triton() -> Type:

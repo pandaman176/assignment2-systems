@@ -1,17 +1,24 @@
 import timeit
+import time
 import torch
 import torch.nn as nn
 import os
 import numpy as np
 from loguru import logger
-from typing import Any, Dict
+from typing import Any
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
+from contextlib import nullcontext
 
 from cs336_basics.optimizer import AdamW
 from cs336_basics.model import BasicsTransformerLM
 from cs336_basics.nn_utils import cross_entropy
+from cs336_basics.annotated_model import annotated_scaled_dot_product_attention
+
+# override scaled_dot_product_attention
+from cs336_basics import model as model_module
+model_module.scaled_dot_product_attention = annotated_scaled_dot_product_attention
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Benchmark runner")
@@ -21,6 +28,12 @@ def parse_args():
                         help="Number of benchmark(default: 3)")
     parser.add_argument("--warm-steps", type=int, default=5,
                         help="Number of warm steps(default: 5)")
+    parser.add_argument("--mixed", action="store_true",
+                        help="Whether to use mixed precision(default: False)")
+    parser.add_argument("--profile-memory", action="store_true",
+                        help="Whether to profile memory(default: False)")
+    parser.add_argument("--compile", action="store_true",
+                        help="Whether to compile the model(default: False)")
     return parser.parse_args()
 
 _PRESETS: dict[str, dict[str, int]] = {
@@ -36,7 +49,7 @@ class BenchmarkAnalyzer:
         self.results_list = []
         self.df = None
     
-    def add_result(self, results: Dict[str, Any]):
+    def add_result(self, results: dict[str, Any]):
         """添加单次benchmark结果"""
         # 提取主要统计信息，避免存储列表数据
         summary_result = {
@@ -170,6 +183,8 @@ def run_benchmark(
     warmup_steps=10,
     total_steps=100,
     include_backward=False,
+    use_mixed_precision=False,
+    profile_memory=False,
     vocab_size=10000,
     batch_size=32,
     seq_len=1024,
@@ -183,27 +198,39 @@ def run_benchmark(
     if include_backward:
         backward_times = []
     model.train(include_backward)
-    for step in range(total_steps):
-        torch.cuda.synchronize() # 保证计时从这开始
-        t0 = timeit.default_timer()
-        logits = model(inputs)
-        loss = cross_entropy(logits, outputs)
-        torch.cuda.synchronize()
-        forward_time = timeit.default_timer() - t0
-        if include_backward:
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            backward_time = timeit.default_timer() - forward_time - t0
-            logger.info(f"Forward time: {forward_time:.3f}s, Backward time: {backward_time:.3f}s")
-        else:
-            logger.info(f"Forward time: {forward_time:.3f}s")
-        
-        if step >= warmup_steps:
-            forward_times.append(forward_time)
+    mixed_or_null_ctx = torch.autocast(device_type=device, dtype=torch.float16) if use_mixed_precision else nullcontext()
+    #mixed_or_null_ctx = torch.autocast(device_type=device, dtype=torch.bfloat16) if use_mixed_precision else nullcontext()
+    with mixed_or_null_ctx:
+        for step in range(total_steps):
+            if step == warmup_steps and profile_memory:
+                torch.cuda.memory._record_memory_history(max_entries=1000000)
+            torch.cuda.synchronize() # 保证计时从这开始
+            t0 = timeit.default_timer()
+            logits = model(inputs)
+            loss = cross_entropy(logits, outputs)
+            torch.cuda.synchronize()
+            forward_time = timeit.default_timer() - t0
             if include_backward:
-                backward_times.append(backward_time)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                backward_time = timeit.default_timer() - forward_time - t0
+                logger.info(f"Forward time: {forward_time:.3f}s, Backward time: {backward_time:.3f}s")
+            else:
+                logger.info(f"Forward time: {forward_time:.3f}s")
+            
+            if step >= warmup_steps:
+                forward_times.append(forward_time)
+                if include_backward:
+                    backward_times.append(backward_time)
     
+    if profile_memory:
+        output_dir = "out/memory"
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        torch.cuda.memory._dump_snapshot(f"{output_dir}/mem_{timestamp}.pickle")
+        torch.cuda.memory._record_memory_history(enabled=None)
+
     forward_times = torch.tensor(forward_times)
     total_times = forward_times
     if include_backward:
@@ -274,7 +301,11 @@ def main() -> None:
             d_ff=cfg["d_ff"],
             rope_theta=cfg["rope_theta"],
         )
+
         model.to(device)
+
+        if args.compile:
+            model = torch.compile(model)
 
         # create optimizer
         optimizer = AdamW(
@@ -292,6 +323,8 @@ def main() -> None:
             warmup_steps=benchmark_cfg["warmup_steps"],
             total_steps=benchmark_cfg["total_steps"],
             include_backward=benchmark_cfg["include_backward"],
+            use_mixed_precision=args.mixed,
+            profile_memory=args.profile_memory,
             vocab_size=cfg["vocab_size"],
             batch_size=benchmark_cfg["batch_size"],
             seq_len=cfg["context_length"],
