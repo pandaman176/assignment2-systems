@@ -27,16 +27,45 @@ def main():
 
         ft_torch, bt_torch, fbt_torch, ft_triton, bt_triton, fbt_triton = run_benchmark(seq_len, d_model, precision)
 
+        ft_torch_str = f"{ft_torch:.3f}" if isinstance(ft_torch, float) else ft_torch
+        bt_torch_str = f"{bt_torch:.3f}" if isinstance(bt_torch, float) else bt_torch
+        fbt_torch_str = f"{fbt_torch:.3f}" if isinstance(fbt_torch, float) else fbt_torch
+        ft_triton_str = f"{ft_triton:.3f}" if isinstance(ft_triton, float) else ft_triton
+        bt_triton_str = f"{bt_triton:.3f}" if isinstance(bt_triton, float) else bt_triton
+        fbt_triton_str = f"{fbt_triton:.3f}" if isinstance(fbt_triton, float) else fbt_triton
+
+        # Calculate speedup only if both ran successfully
+        speedup_fwd_s = "N/A"
+        if isinstance(ft_torch, float) and isinstance(ft_triton, float) and ft_triton > 0:
+            speedup_fwd_s = f"{(ft_torch / ft_triton):5.1f}x"
+        elif isinstance(ft_torch, float) and isinstance(ft_triton, float) and ft_triton == 0:
+            speedup_fwd_s = "Inf"
+
+        speedup_bwd_s = "N/A"
+        if isinstance(bt_torch, float) and isinstance(bt_triton, float) and bt_triton > 0:
+            speedup_bwd_s = f"{(bt_torch / bt_triton):5.1f}x"
+        elif isinstance(bt_torch, float) and isinstance(bt_triton, float) and bt_triton == 0:
+            speedup_bwd_s = "Inf"
+
+        speedup_tot_s = "N/A"
+        if isinstance(fbt_torch, float) and isinstance(fbt_triton, float) and fbt_triton > 0:
+            speedup_tot_s = f"{(fbt_torch / fbt_triton):5.1f}x"
+        elif isinstance(fbt_torch, float) and isinstance(fbt_triton, float) and fbt_triton == 0:
+            speedup_tot_s = "Inf"
+
         result = {
             "seq_len": seq_len,
             "d_model": d_model,
             "precision": percision_names[precision],    
-            "ft_torch": ft_torch,
-            "bt_torch": bt_torch,
-            "fbt_torch": fbt_torch,
-            "ft_triton": ft_triton,
-            "bt_triton": bt_triton,
-            "fbt_triton": fbt_triton,
+            "ft_torch": ft_torch_str,
+            "bt_torch": bt_torch_str,
+            "fbt_torch": fbt_torch_str,
+            "ft_triton": ft_triton_str,
+            "bt_triton": bt_triton_str,
+            "fbt_triton": fbt_triton_str,
+            "speedup_fwd": speedup_fwd_s,
+            "speedup_bwd": speedup_bwd_s,
+            "speedup_tot": speedup_tot_s,
         }
 
         data.append(result)
