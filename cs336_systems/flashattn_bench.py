@@ -94,7 +94,7 @@ def test_backward(func, *args):
     out = func(*args)
     grad_out = torch.randn_like(out)
     def _backward():
-        out.backward(grad_out,oretain_graph=True)
+        out.backward(grad_out,retain_graph=True)
         for arg in args:
             arg.grad = None # Clear gradients for next recomputation
     
