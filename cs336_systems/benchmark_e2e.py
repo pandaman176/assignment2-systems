@@ -14,7 +14,7 @@ from contextlib import nullcontext
 from cs336_basics.optimizer import AdamW
 from cs336_basics.model import BasicsTransformerLM
 from cs336_basics.nn_utils import cross_entropy
-from cs336_basics.annotated_model import annotated_scaled_dot_product_attention
+from cs336_basics.model import annotated_scaled_dot_product_attention
 
 # override scaled_dot_product_attention
 from cs336_basics import model as model_module
