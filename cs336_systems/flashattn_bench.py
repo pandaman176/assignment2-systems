@@ -52,7 +52,7 @@ def run_benchmark(seq_len, d_model, precision):
         return scaled_dot_product_attention(_Q, _K, _V, mask)
     
     def _triton_fwd(_Q, _K, _V):
-        return FlashAttention2_triton.apply(_Q, _K, _V, is_causal=True)
+        return FlashAttention2_triton.apply(_Q, _K, _V, True)
 
     ft_p, bt_p, fbt_p = "OOM", "OOM", "OOM"
     ft_t, bt_t, fbt_t = "OOM", "OOM", "OOM"
