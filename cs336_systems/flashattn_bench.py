@@ -45,6 +45,9 @@ def main():
     mkd_table = df.to_markdown()
     print(mkd_table)
 
+    with(open("flashattn_bench.md", "w", encoding="utf-8")) as f:
+        f.write(mkd_table)
+
 def run_benchmark(seq_len, d_model, precision):
     Q = torch.randn(1, seq_len, d_model, device="cuda", dtype=precision)
     K = torch.randn(1, seq_len, d_model, device="cuda", dtype=precision)
