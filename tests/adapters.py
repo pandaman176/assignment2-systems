@@ -4,7 +4,7 @@ from typing import Type
 
 import torch
 
-from cs336_systems.flashattention2 import FlashAttention2_torch
+from cs336_systems.flashattention2 import FlashAttention2_torch, FlashAttention2_triton
 
 
 def get_flashattention_autograd_function_pytorch() -> Type:
@@ -33,6 +33,7 @@ def get_flashattention_autograd_function_triton() -> Type:
         A class object (not an instance of the class)
     """
     # For example: return MyTritonRMSNormAutogradFunctionClass
+    return FlashAttention2_triton
     raise NotImplementedError
 
 
