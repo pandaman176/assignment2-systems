@@ -42,7 +42,8 @@ def main():
         data.append(result)
     
     df = pd.DataFrame(data)
-    print(df)
+    mkd_table = df.to_markdown()
+    print(mkd_table)
 
 def run_benchmark(seq_len, d_model, precision):
     Q = torch.randn(1, seq_len, d_model, device="cuda", dtype=precision)
