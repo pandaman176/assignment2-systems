@@ -3,7 +3,7 @@ from torch import Tensor
 import math
 import triton
 import triton.language as tl
-from einops import rearrange, repeat, einsum
+from einops import rearrange, einsum
 from jaxtyping import Float
 
 class FlashAttention2_torch(torch.autograd.Function):
@@ -77,7 +77,25 @@ class FlashAttention2_torch(torch.autograd.Function):
         """
         Backward pass of FlashAttention2_torch.
         """
-        raise NotImplementedError("Backward pass is not implemented")
+        Q, K, V, L, Out = ctx.saved_tensors
+        head_dim = Q.shape[-1]
+        scale = 1.0/math.sqrt(head_dim)
+
+        # Out.shape = (..., seq_len, head_dim)
+        # grad_out.shape = (..., seq_len, head_dim)
+        D = torch.sum(grad_out * Out, dim=-1, keepdim=True)
+        # D.shape = (..., seq_len, 1)
+        S = einsum(Q, K, "... q d, ... k d -> ... q k") * scale # S.shape = (..., q, k)
+        # L.shape = (..., seq_len)
+        P = torch.exp(S - L.unsqueeze(-1)) # P.shape = (..., q, k)
+        dV = einsum(P, grad_out, "... q k, ... q d -> ... k d")
+        dP = einsum(grad_out, V, "... q d, ... v d -> ... q v")
+        dS = P * (dP - D)
+        dQ = einsum(dS, K, "... q k, ... k d -> ... q d") * scale
+        dK = einsum(dS, Q, "... q k, ... q d -> ... k d") * scale
+
+        return dQ, dK, dV, None
+
 
 class FlashAttention2_triton(torch.autograd.Function):
     """
@@ -140,7 +158,13 @@ class FlashAttention2_triton(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_out):
-        ...
+        Q, K, V, L, Out = ctx.saved_tensors
+        is_causal = ctx.is_causal
+        seq_len, head_dim = Q.shape[-2:]
+        scale = 1.0/math.sqrt(head_dim)
+
+        dQ, dK, dV = flash_bwd_kernel(Q, K, V, L, Out, grad_out, seq_len, scale, is_causal)
+        return dQ, dK, dV, None
 
 
 @triton.jit
@@ -256,5 +280,33 @@ def flash_fwd_kernel(
     tl.store(O_block_ptr, O_i, boundary_check=(0,1))
     tl.store(L_block_ptr, L_i, boundary_check=(0,))
         
+@torch.compile(fullgraph=True)
+def flash_bwd_kernel(
+    Q: Float[Tensor, " ... queries d_k"],
+    K: Float[Tensor, " ... keys    d_k"],
+    V: Float[Tensor, " ... keys    d_v"],
+    L: Float[Tensor, " ... queries"],
+    Out: Float[Tensor, " ... queries d_v"],
+    grad_out: Float[Tensor, " ... queries d_v"],
+    seq_len,
+    scale,
+    is_causal,
+):
+    D = torch.sum(grad_out * Out, dim=-1, keepdim=True)
+    # D.shape = (..., seq_len, 1)
+    S = einsum(Q, K, "... q d, ... k d -> ... q k") * scale # S.shape = (..., q, k)
+    if is_causal:
+        mask = torch.tril(torch.ones((seq_len, seq_len), dtype=torch.bool, device=S.device))
+        S = S.masked_fill(~mask, float("-inf"))
+    # L.shape = (..., seq_len)
+    P = torch.exp(S - L.unsqueeze(-1)) # P.shape = (..., q, k)
+    
+    dV = einsum(P, grad_out, "... q k, ... q d -> ... k d")
+    dP = einsum(grad_out, V, "... q d, ... v d -> ... q v")
+    dS = P * (dP - D)
+    dQ = einsum(dS, K, "... q k, ... k d -> ... q d") * scale
+    dK = einsum(dS, Q, "... q k, ... q d -> ... k d") * scale
+
+    return dQ, dK, dV
 
 
