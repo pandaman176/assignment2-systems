@@ -1,4 +1,5 @@
 import torch
+import torch._dynamo.config
 import pandas as pd
 from itertools import product
 from triton import testing as ttesting
@@ -6,6 +7,8 @@ from cs336_basics.model import scaled_dot_product_attention
 from cs336_systems.flashattention2 import FlashAttention2_triton
 
 def main():
+    # avoid RecompileLimitExceededError
+    torch._dynamo.config.cache_size_limit = 64
     # Initialize benchmark parameters
     seq_lens = [2**i for i in range(7, 16)] # 128 -> 65536
     d_models = [2**i for i in range(4, 7)] # 16 -> 128
