@@ -220,10 +220,9 @@ def flash_fwd_kernel(
         V_tile = tl.load(V_block_ptr, boundary_check=(0,1), padding_option="zero")
 
         S = tl.dot(Q_tile, tl.trans(K_tile)) * scale
-        old_m_i = m_i.clone()
-        m_i = tl.maximum(m_i, tl.max(S, axis=-1))
-        P = tl.exp(S - m_i[:,None])
-        exp_max_diff = tl.exp(old_m_i - m_i)
+        new_m_i = tl.maximum(m_i, tl.max(S, axis=-1))
+        P = tl.exp(S - new_m_i[:,None])
+        exp_max_diff = tl.exp(m_i - new_m_i)
         l_i = exp_max_diff * l_i + tl.sum(P, axis=-1)
         weight_values_tile = tl.dot(P.to(V_tile.dtype), V_tile)
         O_i = exp_max_diff[:,None] * O_i + weight_values_tile
@@ -231,6 +230,7 @@ def flash_fwd_kernel(
         # Advance pointers
         K_block_ptr = K_block_ptr.advance((K_TILE_SIZE, 0))
         V_block_ptr = V_block_ptr.advance((K_TILE_SIZE, 0))
+        m_i = new_m_i
 
     # Final normalization
     O_i = (O_i / l_i[:,None]).to(O_block_ptr.type.element_ty)
