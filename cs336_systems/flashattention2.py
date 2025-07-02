@@ -234,7 +234,7 @@ def flash_fwd_kernel(
             k_idx_global_start = i * K_TILE_SIZE
             k_idx = k_idx_global_start + tl.arange(0, K_TILE_SIZE)
             mask = q_idx[:,None] < k_idx[None,:] # mask.shape = (Q_TILE_SIZE, K_TILE_SIZE)
-            S = tl.where(mask, 1e-6, S)
+            S = tl.where(mask, -1e6, S)
         
         new_m_i = tl.maximum(m_i, tl.max(S, axis=-1))
         P = tl.exp(S - new_m_i[:,None])
