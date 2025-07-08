@@ -1,4 +1,4 @@
-from .common import _setup_process_group, _cleanup_process_group, ToyModel, _generate_all_data
+from .common import _setup_process_group, _cleanup_process_group,ToyModelWithTiedWeights, ToyModel, _generate_all_data
 
 import torch
 import torch.distributed as dist
@@ -74,15 +74,15 @@ def naive_ddp(rank, world_size, backend, model_class):
     _cleanup_process_group()
 
 def main():
-    backend = "nccl" if torch.cuda.is_available() else "gloo"
-    model_class = ToyModel
+    for model_class in [ToyModel, ToyModelWithTiedWeights]:
+        backend = "nccl" if torch.cuda.is_available() else "gloo"
 
-    mp.spawn(
-        naive_ddp,
-        args=(WORLD_SIZE, backend, model_class),
-        nprocs=WORLD_SIZE,
-        join=True,
-    )
+        mp.spawn(
+            naive_ddp,
+            args=(WORLD_SIZE, backend, model_class),
+            nprocs=WORLD_SIZE,
+            join=True,
+        )
 
 if __name__ == "__main__":
     main()

@@ -96,3 +96,18 @@ d_model seq_len fwd(ms) bwd(ms) mem_before(MB)
 | 51 |     32768 |        32 | f32         |     65.034 | OOM        | OOM         |       2.436 |      43.682 |       46.077 | 26.7x         | N/A           | N/A           |
 | 52 |     32768 |        64 | bf16        |     33.957 | 76.090     | 109.990     |       1.991 |      38.795 |       40.726 | 17.1x         | 2.0x          | 2.7x          |
 | 53 |     32768 |        64 | f32         |     65.043 | OOM        | OOM         |       4.933 |      43.865 |       48.948 | 13.2x         | N/A           | N/A           |
+
+# Benchmark on all reduce
+
+| GLOO | cpu  | 2 proc |    1 MB -> min   0.71 mean    1.11 max   2.28 MB/s
+| GLOO | cpu  | 4 proc |    1 MB -> min   1.44 mean    1.73 max   2.34 MB/s
+| GLOO | cpu  | 6 proc |    1 MB -> min   1.45 mean    1.61 max   1.80 MB/s
+| GLOO | cpu  | 2 proc |   10 MB -> min   4.37 mean    4.69 max   5.19 MB/s
+| GLOO | cpu  | 4 proc |   10 MB -> min   5.93 mean    7.50 max   9.02 MB/s
+| GLOO | cpu  | 6 proc |   10 MB -> min   7.88 mean    9.63 max  12.51 MB/s
+| GLOO | cpu  | 2 proc |  100 MB -> min  49.99 mean   56.11 max  73.44 MB/s
+| GLOO | cpu  | 4 proc |  100 MB -> min  68.69 mean   90.88 max 101.49 MB/s
+| GLOO | cpu  | 6 proc |  100 MB -> min  88.06 mean  106.85 max 123.30 MB/s
+| GLOO | cpu  | 2 proc | 1024 MB -> min 632.19 mean  987.13 max 1367.72 MB/s
+| GLOO | cpu  | 4 proc | 1024 MB -> min 935.76 mean 1176.62 max 1418.46 MB/s
+| GLOO | cpu  | 6 proc | 1024 MB -> min 1629.55 mean 1796.18 max 2249.13 MB/s
