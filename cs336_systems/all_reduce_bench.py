@@ -76,6 +76,7 @@ def benchmark():
                 f"[WARNING] NCCL with {world_size=} requires "
                 f">={world_size} GPUs, but only {torch.cuda.device_count()} GPUs are available."
             )
+            continue
         mp.spawn(fn=distributed_demo, args=(world_size,data_size,backend, WARMUP_ITERS, TIMED_ITERS), nprocs=world_size, join=True)
         print("------------------------"*3)
 
