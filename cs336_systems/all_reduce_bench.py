@@ -18,7 +18,7 @@ TIMED_ITERS = 10
 def distributed_demo(rank, world_size, data_size, backend, warmup, iters):
     # set up
     os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "29500"
+    os.environ["MASTER_PORT"] = "12355"
 
     dist.init_process_group(backend=backend, rank=rank, world_size=world_size)
 
