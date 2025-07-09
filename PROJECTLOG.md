@@ -99,15 +99,27 @@ d_model seq_len fwd(ms) bwd(ms) mem_before(MB)
 
 # Benchmark on all reduce
 
-| GLOO | cpu  | 2 proc |    1 MB -> min   0.71 mean    1.11 max   2.28 MB/s
-| GLOO | cpu  | 4 proc |    1 MB -> min   1.44 mean    1.73 max   2.34 MB/s
-| GLOO | cpu  | 6 proc |    1 MB -> min   1.45 mean    1.61 max   1.80 MB/s
-| GLOO | cpu  | 2 proc |   10 MB -> min   4.37 mean    4.69 max   5.19 MB/s
-| GLOO | cpu  | 4 proc |   10 MB -> min   5.93 mean    7.50 max   9.02 MB/s
-| GLOO | cpu  | 6 proc |   10 MB -> min   7.88 mean    9.63 max  12.51 MB/s
-| GLOO | cpu  | 2 proc |  100 MB -> min  49.99 mean   56.11 max  73.44 MB/s
-| GLOO | cpu  | 4 proc |  100 MB -> min  68.69 mean   90.88 max 101.49 MB/s
-| GLOO | cpu  | 6 proc |  100 MB -> min  88.06 mean  106.85 max 123.30 MB/s
-| GLOO | cpu  | 2 proc | 1024 MB -> min 632.19 mean  987.13 max 1367.72 MB/s
-| GLOO | cpu  | 4 proc | 1024 MB -> min 935.76 mean 1176.62 max 1418.46 MB/s
-| GLOO | cpu  | 6 proc | 1024 MB -> min 1629.55 mean 1796.18 max 2249.13 MB/s
+GLOO | cpu  | 2 proc |    1 MB -> min   0.68 mean    0.88 max   1.19 MB/s
+NCCL | cuda | 2 proc |    1 MB -> min   0.17 mean    0.18 max   0.23 MB/s
+GLOO | cpu  | 4 proc |    1 MB -> min   1.45 mean    1.72 max   2.22 MB/s
+[WARNING] NCCL with world_size=4 requires >=4 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 6 proc |    1 MB -> min   1.89 mean    2.17 max   2.57 MB/s
+[WARNING] NCCL with world_size=6 requires >=6 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 2 proc |   10 MB -> min   4.65 mean    5.53 max   8.16 MB/s
+NCCL | cuda | 2 proc |   10 MB -> min   1.34 mean    1.36 max   1.40 MB/s
+GLOO | cpu  | 4 proc |   10 MB -> min   6.63 mean    7.42 max   8.65 MB/s
+[WARNING] NCCL with world_size=4 requires >=4 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 6 proc |   10 MB -> min   7.23 mean    8.29 max   9.00 MB/s
+[WARNING] NCCL with world_size=6 requires >=6 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 2 proc |  100 MB -> min  48.28 mean   54.38 max  64.34 MB/s
+NCCL | cuda | 2 proc |  100 MB -> min  12.95 mean   13.07 max  13.15 MB/s
+GLOO | cpu  | 4 proc |  100 MB -> min  65.56 mean   75.38 max  97.51 MB/s
+[WARNING] NCCL with world_size=4 requires >=4 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 6 proc |  100 MB -> min 106.05 mean  117.75 max 126.51 MB/s
+[WARNING] NCCL with world_size=6 requires >=6 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 2 proc | 1024 MB -> min 694.55 mean 1060.76 max 1268.18 MB/s
+NCCL | cuda | 2 proc | 1024 MB -> min 130.23 mean  131.34 max 132.71 MB/s
+GLOO | cpu  | 4 proc | 1024 MB -> min 1111.45 mean 1311.16 max 1643.89 MB/s
+[WARNING] NCCL with world_size=4 requires >=4 GPUs, but only 2 GPUs are available.
+GLOO | cpu  | 6 proc | 1024 MB -> min 1424.33 mean 1759.10 max 2168.13 MB/s
+[WARNING] NCCL with world_size=6 requires >=6 GPUs, but only 2 GPUs are available.
