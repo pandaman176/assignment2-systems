@@ -2,18 +2,20 @@ from .flat_ddp import FlatDDPParameters
 from .naive_ddp import NaiveDDPIndividualParameters
 from .overlap_ddp import DDPBucketParameters, DDPIndividualParameters
 from .common import _setup_process_group, _cleanup_process_group, ToyModel, _generate_all_data
-from .common import BigToyModel
 
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import timeit
-from itertools import product, chain
+from itertools import chain
 import numpy as np
+from torch.profiler import profile, ProfilerActivity, record_function
 
 WORLD_SIZE = 2
 BUCKET_SIZE_MBS = [1, 10, 100, 1000]
 WARMUP_ITERS = 5
+INNER_SIZE1 = 10
+INNER_SIZE2 = 5 * INNER_SIZE1
 
 
 def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
@@ -25,7 +27,7 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
         if device.startswith("cuda"):
             torch.cuda.synchronize(device=device)
 
-    baseline_model = model_class().to(device)
+    baseline_model = model_class(INNER_SIZE1, INNER_SIZE2).to(device)
     naive_model = NaiveDDPIndividualParameters(baseline_model)
     flat_model = FlatDDPParameters(baseline_model)
     overlap_model = DDPIndividualParameters(baseline_model)
@@ -50,34 +52,44 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
         ddp_model.train()
         
         durations = []
-        for epoch in range(num_epochs):
+        activities = [ProfilerActivity.CPU]
+        if torch.cuda.is_available():
+            device = "cuda"
+            activities += [ProfilerActivity.CUDA]
+        print(activities)
+        with profile(
+            activities=activities,
+        ) as prof:
+            for epoch in range(num_epochs):
 
-            # train the DDP model
-            local_x = all_x[rank * mini_batch_size : (rank + 1) * mini_batch_size].to(device)
-            local_y = all_y[rank * mini_batch_size : (rank + 1) * mini_batch_size].to(device)
-
-
-            ddp_optimizer.zero_grad()
-            local_out = ddp_model(local_x)
-            loss = loss_fn(local_out, local_y)
-            _sync()
-            start = timeit.default_timer()
-            loss.backward()
-            ddp_model.finish_gradients_syncronization()
-            _sync()
-            end = timeit.default_timer()
-            ddp_optimizer.step()
+                # train the DDP model
+                local_x = all_x[rank * mini_batch_size : (rank + 1) * mini_batch_size].to(device)
+                local_y = all_y[rank * mini_batch_size : (rank + 1) * mini_batch_size].to(device)
 
 
-            if epoch >= WARMUP_ITERS:
-                duration = end - start
-                durations.append(duration)
+                ddp_optimizer.zero_grad()
+                with record_function("forward"):
+                    local_out = ddp_model(local_x)
+                    loss = loss_fn(local_out, local_y)
+                _sync()
+                start = timeit.default_timer()
+                loss.backward()
+                ddp_model.finish_gradients_syncronization()
+                _sync()
+                end = timeit.default_timer()
+                ddp_optimizer.step()
 
-            # shuffle the data so that during the next iteration, each DDP rank sees a different set of inputs.
-            torch.manual_seed(42 + epoch)
-            shuffle_idxs = torch.randperm(all_x.size(0))
-            all_x = all_x[shuffle_idxs]
-            all_y = all_y[shuffle_idxs]
+
+                if epoch >= WARMUP_ITERS:
+                    duration = end - start
+                    durations.append(duration)
+
+                # shuffle the data so that during the next iteration, each DDP rank sees a different set of inputs.
+                torch.manual_seed(42 + epoch)
+                shuffle_idxs = torch.randperm(all_x.size(0))
+                all_x = all_x[shuffle_idxs]
+                all_y = all_y[shuffle_idxs]
+
 
         # statistics
         gathered: list[list[float]] = [None] * world_size
@@ -103,7 +115,7 @@ def main():
     print(f"Benchmarking on {backend.upper()}")
     print("----------------------------"*2)
     for bucket_size_mb in BUCKET_SIZE_MBS:
-        model_class = BigToyModel
+        model_class = ToyModel
 
         mp.spawn(
             bench_ddp,

@@ -22,16 +22,6 @@ def validate_ddp_net_equivalence(net):
 
 
 class _FC2(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.fc = nn.Linear(10, 50, bias=True)
-        self.fc.bias.requires_grad = False
-
-    def forward(self, x):
-        x = self.fc(x)
-        return x
-
-class _FC2(nn.Module):
     def __init__(self, in_features, out_features):
         super().__init__()
         self.fc = nn.Linear(in_features, out_features, bias=True)
@@ -42,11 +32,11 @@ class _FC2(nn.Module):
         return x
 
 class ToyModel(nn.Module):
-    def __init__(self):
+    def __init__(self, inner_size1=10, inner_size2=50):
         super().__init__()
-        self.fc1 = nn.Linear(FEATURE_IN, 10, bias=False)
-        self.fc2 = _FC2()
-        self.fc3 = nn.Linear(50, FEATURE_OUT, bias=False)
+        self.fc1 = nn.Linear(FEATURE_IN, inner_size1, bias=False)
+        self.fc2 = _FC2(inner_size1, inner_size2)
+        self.fc3 = nn.Linear(inner_size2, FEATURE_OUT, bias=False)
         self.relu = nn.ReLU()
         self.no_grad_fixed_param = nn.Parameter(torch.tensor([2.0, 2.0]), requires_grad=False)
 
