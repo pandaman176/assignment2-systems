@@ -54,7 +54,6 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
         durations = []
         activities = [ProfilerActivity.CPU]
         if torch.cuda.is_available():
-            device = "cuda"
             activities += [ProfilerActivity.CUDA]
         print(activities)
         with profile(
