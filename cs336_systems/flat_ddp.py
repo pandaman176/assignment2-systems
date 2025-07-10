@@ -116,7 +116,7 @@ class FlatDDPParameters(torch.nn.Module):
         return self.module(*inputs, **kwargs)
 
     def finish_gradients_syncronization(self):
-        grades = [param.grad for param in self.model.parameters() if param.requires_grad and param.grad is not None]
+        grades = [param.grad for param in self.module.parameters() if param.requires_grad and param.grad is not None]
         if not grades:
             return
         flat_grades = _flatten_dense_tensors(grades)
@@ -124,7 +124,7 @@ class FlatDDPParameters(torch.nn.Module):
         flat_grades.div_(self.world_size)
         restored_grads = _unflatten_dense_tensors(flat_grades, grades)
         i = 0 
-        for param in self.model.parameters():
+        for param in self.module.parameters():
             if param.requires_grad and param.grad is not None:
                 param.grad.copy_(restored_grads[i])
                 i += 1        

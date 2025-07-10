@@ -96,21 +96,14 @@ class NaiveDDPIndividualParameters(torch.nn.Module):
         for p in self.module.parameters():
             dist.broadcast(p.data, src=0, async_op=False)
 
-        def _avg_grads(param):
-            dist.all_reduce(param.grad, op=dist.ReduceOp.SUM, async_op=False)
-            param.grad.div_(self.world_size)
-
-        for p in module.parameters():
-            if p.requires_grad:
-                p.register_post_accumulate_grad_hook(_avg_grads)
-
     def forward(self, *inputs, **kwargs):
         return self.module(*inputs, **kwargs)
 
     def finish_gradients_syncronization(self):
-        """
-        create for api compatibility
-        """
+        for param in self.module.parameters():
+            if param.requires_grad and param.grad is not None:
+                dist.all_reduce(param.grad, op=dist.ReduceOp.SUM)
+                param.grad.div_(self.world_size)
         return
 
 
