@@ -22,7 +22,10 @@ INNER_SIZE2 = 5 * INNER_SIZE1
 def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
     
     device = _setup_process_group(rank=rank, world_size=world_size, backend=backend)
-    dist.barrier()
+    if device.type.startswith("cuda"):
+        dist.barrier(device_ids=[device.index])
+    else:
+        dist.barrier()
 
     def _sync():
         if device.type.startswith("cuda"):
