@@ -116,7 +116,7 @@ def main():
     backend = "nccl" if torch.cuda.is_available() else "gloo"
     print(f"Benchmarking on {backend.upper()}")
     print("----------------------------"*2)
-    size = input("Enter the size of the model (default 10): ")
+    size = int(input("Enter the size of the model (default 10): "))
     for bucket_size_mb in BUCKET_SIZE_MBS:
         model_class = ToyModel
 
