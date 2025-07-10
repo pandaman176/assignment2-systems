@@ -123,3 +123,78 @@ GLOO | cpu  | 4 proc | 1024 MB -> min 1111.45 mean 1311.16 max 1643.89 MB/s
 [WARNING] NCCL with world_size=4 requires >=4 GPUs, but only 2 GPUs are available.
 GLOO | cpu  | 6 proc | 1024 MB -> min 1424.33 mean 1759.10 max 2168.13 MB/s
 [WARNING] NCCL with world_size=6 requires >=6 GPUs, but only 2 GPUs are available.
+
+# DDP Benchmark
+
+root@autodl-container-7e674e82f3-4ace97e9:~/assignment2-systems# uv run -m -- cs336_systems.ddp_bench
+Benchmarking on NCCL
+--------------------------------------------------------
+Enter the size of the model (default 10): 50
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 0.95 | mean 1.01 | max 1.16
+FlatDDPParameters              | bkw pass and communication time (ms) |min 0.94 | mean 0.97 | max 1.03
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 0.94 | mean 0.98 | max 1.02
+DDPBucketParameters(1 MB)      | bkw pass and communication time (ms) |min 0.85 | mean 1.12 | max 4.51
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 0.95 | mean 1.25 | max 3.30
+FlatDDPParameters              | bkw pass and communication time (ms) |min 0.88 | mean 1.09 | max 2.25
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 0.92 | mean 1.36 | max 4.95
+DDPBucketParameters(10 MB)     | bkw pass and communication time (ms) |min 0.85 | mean 1.30 | max 3.91
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 1.01 | mean 1.64 | max 5.11
+FlatDDPParameters              | bkw pass and communication time (ms) |min 0.92 | mean 1.35 | max 5.92
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 0.96 | mean 1.14 | max 1.35
+DDPBucketParameters(100 MB)    | bkw pass and communication time (ms) |min 0.87 | mean 0.96 | max 1.20
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 0.86 | mean 0.90 | max 0.98
+FlatDDPParameters              | bkw pass and communication time (ms) |min 0.84 | mean 0.88 | max 0.95
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 0.90 | mean 1.06 | max 2.94
+DDPBucketParameters(1000 MB)   | bkw pass and communication time (ms) |min 0.79 | mean 0.82 | max 0.91
+--------------------------------------------------------
+root@autodl-container-7e674e82f3-4ace97e9:~/assignment2-systems# uv run -m -- cs336_systems.ddp_bench
+Benchmarking on NCCL
+--------------------------------------------------------
+Enter the size of the model (default 10): 1000
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 2.34 | mean 2.52 | max 2.75
+FlatDDPParameters              | bkw pass and communication time (ms) |min 2.28 | mean 2.75 | max 7.28
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 2.10 | mean 2.30 | max 3.30
+DDPBucketParameters(1 MB)      | bkw pass and communication time (ms) |min 2.13 | mean 2.28 | max 2.46
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 2.39 | mean 2.50 | max 2.66
+FlatDDPParameters              | bkw pass and communication time (ms) |min 2.25 | mean 2.74 | max 12.19
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 2.12 | mean 2.34 | max 3.20
+DDPBucketParameters(10 MB)     | bkw pass and communication time (ms) |min 2.12 | mean 2.47 | max 6.75
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 2.37 | mean 2.69 | max 3.75
+FlatDDPParameters              | bkw pass and communication time (ms) |min 2.25 | mean 2.35 | max 2.71
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 2.13 | mean 2.22 | max 3.18
+DDPBucketParameters(100 MB)    | bkw pass and communication time (ms) |min 2.21 | mean 2.41 | max 4.22
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 2.38 | mean 2.62 | max 5.29
+FlatDDPParameters              | bkw pass and communication time (ms) |min 2.27 | mean 2.31 | max 2.40
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 2.12 | mean 2.15 | max 2.23
+DDPBucketParameters(1000 MB)   | bkw pass and communication time (ms) |min 2.15 | mean 2.21 | max 2.40
+--------------------------------------------------------
+root@autodl-container-7e674e82f3-4ace97e9:~/assignment2-systems# uv run -m -- cs336_systems.ddp_bench
+Benchmarking on NCCL
+--------------------------------------------------------
+Enter the size of the model (default 10): 5000
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 39.99 | mean 41.44 | max 42.71
+FlatDDPParameters              | bkw pass and communication time (ms) |min 41.81 | mean 42.97 | max 46.46
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 40.02 | mean 42.17 | max 46.20
+DDPBucketParameters(1 MB)      | bkw pass and communication time (ms) |min 39.55 | mean 41.36 | max 42.14
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 39.56 | mean 40.53 | max 42.61
+FlatDDPParameters              | bkw pass and communication time (ms) |min 41.37 | mean 42.51 | max 44.41
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 39.32 | mean 40.83 | max 42.15
+DDPBucketParameters(10 MB)     | bkw pass and communication time (ms) |min 39.83 | mean 41.21 | max 43.05
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 40.15 | mean 41.18 | max 42.69
+FlatDDPParameters              | bkw pass and communication time (ms) |min 40.89 | mean 42.27 | max 45.44
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 39.77 | mean 41.16 | max 42.15
+DDPBucketParameters(100 MB)    | bkw pass and communication time (ms) |min 39.43 | mean 40.77 | max 43.23
+--------------------------------------------------------
+NaiveDDPIndividualParameters   | bkw pass and communication time (ms) |min 39.38 | mean 40.36 | max 43.63
+FlatDDPParameters              | bkw pass and communication time (ms) |min 41.22 | mean 43.07 | max 44.40
+DDPIndividualParameters        | bkw pass and communication time (ms) |min 39.87 | mean 41.35 | max 42.31
+DDPBucketParameters(1000 MB)   | bkw pass and communication time (ms) |min 41.05 | mean 42.51 | max 43.61
+--------------------------------------------------------
