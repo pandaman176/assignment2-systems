@@ -88,7 +88,7 @@ def _generate_all_data(total_samples=100, feature_dim=FEATURE_IN):
 
 
 def _setup_process_group(rank, world_size, backend):
-    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_ADDR"] = "127.0.0.1"
     os.environ["MASTER_PORT"] = "12390"
     # https://discuss.pytorch.org/t/should-local-rank-be-equal-to-torch-cuda-current-device/150873/2
     if torch.cuda.is_available():
