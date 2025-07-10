@@ -56,6 +56,7 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
         if torch.cuda.is_available():
             activities += [ProfilerActivity.CUDA]
         print(activities)
+        print(device)
         with profile(
             activities=activities,
         ) as prof:
