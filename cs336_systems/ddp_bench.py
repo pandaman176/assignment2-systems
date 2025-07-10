@@ -25,7 +25,7 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
     dist.barrier()
 
     def _sync():
-        if device.startswith("cuda"):
+        if device.type.startswith("cuda"):
             torch.cuda.synchronize(device=device)
 
     baseline_model = model_class(INNER_SIZE1, INNER_SIZE2).to(device)
