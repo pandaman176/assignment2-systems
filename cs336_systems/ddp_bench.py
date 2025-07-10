@@ -19,7 +19,7 @@ INNER_SIZE1 = 10
 INNER_SIZE2 = 5 * INNER_SIZE1
 
 
-def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
+def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb, size):
     
     device = _setup_process_group(rank=rank, world_size=world_size, backend=backend)
     if device.type.startswith("cuda"):
@@ -31,7 +31,7 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
         if device.type.startswith("cuda"):
             torch.cuda.synchronize(device=device)
 
-    baseline_model = model_class(INNER_SIZE1, INNER_SIZE2).to(device)
+    baseline_model = model_class(size, size*5).to(device)
     naive_model = NaiveDDPIndividualParameters(deepcopy(baseline_model))
     flat_model = FlatDDPParameters(deepcopy(baseline_model))
     overlap_model = DDPIndividualParameters(deepcopy(baseline_model))
@@ -116,12 +116,13 @@ def main():
     backend = "nccl" if torch.cuda.is_available() else "gloo"
     print(f"Benchmarking on {backend.upper()}")
     print("----------------------------"*2)
+    size = input("Enter the size of the model (default 10): ")
     for bucket_size_mb in BUCKET_SIZE_MBS:
         model_class = ToyModel
 
         mp.spawn(
             bench_ddp,
-            args=(WORLD_SIZE, backend, model_class, bucket_size_mb),
+            args=(WORLD_SIZE, backend, model_class, bucket_size_mb, size),
             nprocs=WORLD_SIZE,
             join=True,
         )
