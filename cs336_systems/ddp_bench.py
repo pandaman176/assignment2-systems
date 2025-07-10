@@ -10,6 +10,7 @@ import timeit
 from itertools import chain
 import numpy as np
 from torch.profiler import profile, ProfilerActivity, record_function
+from copy import deepcopy
 
 WORLD_SIZE = 2
 BUCKET_SIZE_MBS = [1, 10, 100, 1000]
@@ -28,10 +29,10 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
             torch.cuda.synchronize(device=device)
 
     baseline_model = model_class(INNER_SIZE1, INNER_SIZE2).to(device)
-    naive_model = NaiveDDPIndividualParameters(baseline_model)
-    flat_model = FlatDDPParameters(baseline_model)
-    overlap_model = DDPIndividualParameters(baseline_model)
-    overlap_bucketed_model = DDPBucketParameters(baseline_model, bucket_size_mb)
+    naive_model = NaiveDDPIndividualParameters(deepcopy(baseline_model))
+    flat_model = FlatDDPParameters(deepcopy(baseline_model))
+    overlap_model = DDPIndividualParameters(deepcopy(baseline_model))
+    overlap_bucketed_model = DDPBucketParameters(deepcopy(baseline_model), bucket_size_mb)
 
     models = [naive_model, flat_model, overlap_model, overlap_bucketed_model]
 
@@ -55,8 +56,6 @@ def bench_ddp(rank, world_size, backend, model_class, bucket_size_mb):
         activities = [ProfilerActivity.CPU]
         if torch.cuda.is_available():
             activities += [ProfilerActivity.CUDA]
-        print(activities)
-        print(device)
         with profile(
             activities=activities,
         ) as prof:
